@@ -1,5 +1,6 @@
 import logging
 from time import time
+from datetime import datetime, timezone, MAXYEAR
 from concurrent.futures import ThreadPoolExecutor
 from azure.cosmosdb.table.tableservice import TableService
 
@@ -19,6 +20,7 @@ class AzureTableStorageHandler(logging.Handler):
             self.table_service.create_table(self.table_name)
         self.formatter = logging.Formatter("%(message)s")
         self.executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="AzHndlr")
+        self.epoch_max = datetime(MAXYEAR, 12, 31, 23, 59, 59, 999999, timezone.utc).timestamp()
 
     def insert_log(self, record):
         """
@@ -26,7 +28,7 @@ class AzureTableStorageHandler(logging.Handler):
         """
         entity = {
             "PartitionKey": record.name,
-            "RowKey": str(time()),
+            "RowKey": str(self.epoch_max - time()),
             "LocalTimestamp": self.formatter.formatTime(record),
             "LevelName": record.levelname,
             "Level": record.levelno,
